@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Mask Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Settings Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h2>Settings</h2>
+      <button id="settingsToggle" class="sidebar-close" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sidebar-body">
+      <div class="form-group">
+        <label for="apiBaseUrl">API Base URL</label>
+        <input id="apiBaseUrl" type="text" placeholder="https://api.openai.com">
+      </div>
+      <div class="form-group">
+        <label for="apiKey">API Key</label>
+        <div class="input-with-toggle">
+          <input id="apiKey" type="password" placeholder="sk-...">
+          <button id="toggleApiKey" class="input-toggle" aria-label="Toggle API key visibility">
+            <svg class="icon-eye" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="modelA">Vision Model</label>
+        <input id="modelA" type="text" placeholder="gpt-4o">
+      </div>
+      <div class="form-group">
+        <label for="keywords">Keywords</label>
+        <textarea id="keywords" rows="3" placeholder="tomofun, furbo"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="blockSize">Blur Radius</label>
+          <input id="blockSize" type="number" value="10" min="1">
+        </div>
+        <div class="form-group">
+          <label for="maxRetries">Max Retries</label>
+          <input id="maxRetries" type="number" value="3" min="1" max="10">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="concurrency">Concurrent Processing</label>
+        <input id="concurrency" type="number" value="1" min="1" max="20">
+      </div>
+      <div class="sidebar-actions">
+        <button id="saveConfigBtn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+        <button id="resetConfigBtn" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Reset
+        </button>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Content -->
+  <main id="mainContent" class="main-content">
+    <header class="top-bar">
+      <button id="settingsToggle2" class="btn-icon" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+      <h1 class="top-bar-title">Image Mask Tool</h1>
+      <span class="top-bar-badge">AI-Powered</span>
+    </header>
+
+    <!-- Upload Zone -->
+    <section class="upload-section">
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-zone-inner">
+          <div class="drop-zone-icon-wrap">
+            <svg class="drop-zone-icon" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="drop-zone-text">Drop images here</p>
+          <p class="drop-zone-hint">or click to browse &middot; PNG, JPG, WebP &middot; PPTX supported</p>
+        </div>
+        <input id="fileInput" type="file" multiple accept="image/*,.pptx">
+      </div>
+    </section>
+
+    <!-- Action Buttons -->
+    <section class="actions-bar">
+      <button id="processBtn" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Process All
+      </button>
+      <button id="cancelBtn" class="btn btn-danger" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        Cancel
+      </button>
+      <div class="actions-spacer"></div>
+      <button id="downloadAllBtn" class="btn btn-success" disabled>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download All
+      </button>
+      <button id="clearAllBtn" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Clear
+      </button>
+    </section>
+
+    <!-- Image Queue -->
+    <section class="section" id="queueSection">
+      <div class="section-header">
+        <h2 class="section-title">Queue</h2>
+        <span class="section-count" id="queueCount"></span>
+      </div>
+      <div id="imageQueue" class="image-grid"></div>
+      <div class="empty-state" id="queueEmpty">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <p>Upload images to get started</p>
+      </div>
+    </section>
+
+    <!-- Results Gallery -->
+    <section class="section" id="resultsSection">
+      <div class="section-header">
+        <h2 class="section-title">Results</h2>
+        <span class="section-count" id="resultsCount"></span>
+      </div>
+      <div id="resultsGallery" class="results-grid"></div>
+      <div class="empty-state" id="resultsEmpty">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <p>Processed images will appear here</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" hidden>
+    <button class="lightbox-close" aria-label="Close lightbox">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <img class="lightbox-img" src="" alt="Full size preview">
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
